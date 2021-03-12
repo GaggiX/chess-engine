@@ -1,0 +1,5 @@
+/target
+/src/res
+/src/bin
+Cargo.lock
+.vscode/
