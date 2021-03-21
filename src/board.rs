@@ -313,7 +313,7 @@ impl Chess {
             })
             .max_by(|(fst_eval, _), (snd_eval, _)| fst_eval.cmp(snd_eval))
             .map(|(_, best_move)| best_move);
-        println!("{}", num.load(Relaxed));
+        //println!("{}", num.load(Relaxed));
         test
     }
 

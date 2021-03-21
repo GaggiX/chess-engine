@@ -79,7 +79,7 @@ pub const H6: Position = Position::new(2, 7);
 pub const H7: Position = Position::new(1, 7);
 pub const H8: Position = Position::new(0, 7);
 
-#[derive(Clone, Copy, PartialEq, Default, Debug)]
+#[derive(Clone, Copy, PartialEq, Default, Hash, Debug)]
 pub struct Position {
     pub row: i32,
     pub col: i32,
@@ -224,7 +224,7 @@ impl TryFrom<&str> for Position {
             Some(&b'f') => 5,
             Some(&b'g') => 6,
             Some(&b'h') => 7,
-            _ => bail!("error parsing position"),
+            _ => bail!("error parsing position: {}", pos),
         };
 
         res.row = match pos.as_bytes().get(1) {
@@ -236,7 +236,7 @@ impl TryFrom<&str> for Position {
             Some(&b'3') => 5,
             Some(&b'2') => 6,
             Some(&b'1') => 7,
-            _ => bail!("error parsing position"),
+            _ => bail!("error parsing position: {}", pos),
         };
 
         Ok(res)
@@ -293,7 +293,28 @@ impl TryFrom<String> for Move {
                     Some(&b'b') => Some(PieceType::Bishop),
                     Some(&b'r') => Some(PieceType::Rook),
                     Some(&b'q') => Some(PieceType::Queen),
-                    Some(_) => bail!("error parsing move"),
+                    Some(_) => bail!("error parsing move: {}", r#move),
+                    None => None,
+                },
+            }),
+        }
+    }
+}
+
+impl TryFrom<&str> for Move {
+    type Error = Error;
+
+    fn try_from(r#move: &str) -> Result<Self, Self::Error> {
+        match r#move {
+            _ => Ok(Move {
+                from: (&r#move[0..2]).try_into()?,
+                to: (&r#move[2..4]).try_into()?,
+                prom: match r#move.as_bytes().get(4) {
+                    Some(&b'k') => Some(PieceType::Knight),
+                    Some(&b'b') => Some(PieceType::Bishop),
+                    Some(&b'r') => Some(PieceType::Rook),
+                    Some(&b'q') => Some(PieceType::Queen),
+                    Some(_) => bail!("error parsing move: {}", r#move),
                     None => None,
                 },
             }),

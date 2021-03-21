@@ -31,7 +31,7 @@ fn negamax(
         if !chess.is_check() {
             return 0;
         } else {
-            return i32::MIN;
+            return (i32::MIN / 2) - depth;
         }
     }
 

@@ -1,5 +1,8 @@
 /target
 /src/res
-/src/bin
+/src/bin/game.rs
+/src/bin/bin.rs
+/src/bin/lichess.rs
+/lichess
 Cargo.lock
 .vscode/
