@@ -1,4 +1,4 @@
-use std::{convert::TryInto, fs::File, io::{Write, stdin}};
+use std::{convert::TryInto, io::stdin};
 
 use anyhow::Result;
 use chess_engine2::{
@@ -17,21 +17,20 @@ impl UCI {
         }
     }
 
-    fn run(&mut self, file: &mut File) -> Result<()> {
+    fn run(&mut self) -> Result<()> {
         println!("id name basic chess engine");
         println!("id author Federico Gaggero");
         println!("uciok");
         loop {
             let mut input = String::new();
             stdin().read_line(&mut input)?;
-            file.write(input.as_bytes())?;
             let tokens: Vec<&str> = input.split_ascii_whitespace().collect();
             match tokens[0] {
                 "quit" => break,
                 "stop" => (),
                 "isready" => println!("readyok"),
                 "ucinewgame" => self.ucinewgame(),
-                "position" => self.position(&tokens, file)?,
+                "position" => self.position(&tokens)?,
                 "go" => self.go(&tokens)?,
                 _ => continue,
             }
@@ -43,7 +42,7 @@ impl UCI {
         self.chess = Chess::new();
     }
 
-    fn position(&mut self, tokens: &[&str], file: &mut File) -> Result<()> {
+    fn position(&mut self, tokens: &[&str]) -> Result<()> {
         let mut is_fen = false;
         let mut fen_tokens = Vec::new();
         let mut moves = Vec::new();
@@ -69,7 +68,6 @@ impl UCI {
         }
 
         for r#move in moves {
-            file.write(r#move.as_bytes())?;
             self.chess.set(r#move.try_into()?)
         }
 
@@ -108,12 +106,8 @@ impl UCI {
 }
 
 fn main() -> Result<()> {
-    let mut file = File::create("/home/gaggix/Documenti/Rust/chess_engine2/lichess/lichess-bot/engines/log")?;
     let mut uci = UCI::new();
-    match uci.run(&mut file) {
-        Ok(_) => (),
-        Err(e) => {file.write(e.to_string().as_bytes())?;}
-    };
+    uci.run().unwrap();
 
     Ok(())
 }

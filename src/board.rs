@@ -1,9 +1,5 @@
 use core::panic;
-use std::{
-    fmt::Display,
-    ops::Not,
-    sync::atomic::{AtomicI32, Ordering::Relaxed},
-};
+use std::{fmt::Display, ops::Not, sync::atomic::AtomicI32};
 
 use crate::{fen, negamax, piece::*, position::*};
 
