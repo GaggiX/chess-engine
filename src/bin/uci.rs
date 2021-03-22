@@ -95,7 +95,7 @@ impl UCI {
 
         eprint!("time: {}ms", time);
 
-        if let Some(r#move) = self.chess.get_best_move_uci(4) {
+        if let Some(r#move) = self.chess.get_best_move_uci(5) {
             println!("bestmove {}", r#move)
         } else {
             println!("bestmove 0000")

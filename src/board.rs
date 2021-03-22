@@ -1,10 +1,9 @@
 use core::panic;
-use std::{fmt::Display, ops::Not, sync::atomic::AtomicI32};
+use std::{fmt::Display, ops::Not};
 
 use crate::{fen, negamax, piece::*, position::*};
 
 use anyhow::Result;
-use rayon::prelude::*;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
@@ -291,26 +290,61 @@ impl Chess {
             .sum()
     }
 
-    pub fn get_best_move(&self, depth: i32) -> Option<Move> {
-        let num = AtomicI32::new(0);
-        let test = self
-            .gen_legal_moves()
-            .par_iter()
-            .map(|&legal_move| {
-                let eval = !negamax(
-                    self.set_move(legal_move).invert_turn(),
-                    i32::MIN,
-                    i32::MAX,
-                    depth,
-                    !self.turn,
-                    &num,
-                );
-                (eval, legal_move)
+    pub fn sort_moves(&self, legal_moves: Vec<Move>) -> Vec<(i32, Move)> {
+        let mut ordered_moves = legal_moves
+            .iter()
+            .map(|&r#move| {
+                (
+                    {
+                        let Move { from, to, prom } = r#move;
+                        let mut value = 0;
+                        let aggressor = self.board[usize::from(from)].unwrap();
+
+                        if let Some(victim) = self.board[usize::from(to)] {
+                            value += 10 * victim.r#type.evaluate_material()
+                                - aggressor.r#type.evaluate_material()
+                        }
+
+                        if let Some(prom_piece) = prom {
+                            value += prom_piece.evaluate_material()
+                        }
+
+                        value
+                    },
+                    r#move,
+                )
             })
-            .max_by(|(fst_eval, _), (snd_eval, _)| fst_eval.cmp(snd_eval))
-            .map(|(_, best_move)| best_move);
-        //println!("{}", num.load(Relaxed));
-        test
+            .collect::<Vec<(i32, Move)>>();
+
+        ordered_moves.sort_unstable_by(|(a, _), (b, _)| b.cmp(a));
+
+        ordered_moves
+    }
+
+    pub fn get_best_move(&self, depth: i32) -> Option<Move> {
+        let legal_moves = self.gen_legal_moves();
+        let mut r#move = None;
+        let mut alpha = i32::MIN;
+        let beta = i32::MAX;
+
+        let ordered_moves = self.sort_moves(legal_moves);
+
+        for (_, legal_move) in ordered_moves {
+            let eval = !negamax(
+                self.set_move(legal_move).invert_turn(),
+                !beta,
+                !alpha,
+                depth,
+                !self.turn,
+            );
+
+            if eval > alpha {
+                alpha = eval;
+                r#move = Some(legal_move);
+            }
+        }
+
+        r#move
     }
 
     pub fn get_best_move_uci(&self, depth: i32) -> Option<String> {

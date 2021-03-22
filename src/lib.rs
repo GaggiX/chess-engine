@@ -5,7 +5,6 @@ mod position;
 
 use std::{
     cmp::max,
-    sync::atomic::{AtomicI32, Ordering::Relaxed},
 };
 
 pub use board::Chess;
@@ -13,15 +12,7 @@ pub use board::Color;
 pub use piece::{Piece, PieceType};
 pub use position::*;
 
-fn negamax(
-    chess: Chess,
-    mut alpha: i32,
-    beta: i32,
-    depth: i32,
-    turn: Color,
-    num: &AtomicI32,
-) -> i32 {
-    num.fetch_add(1, Relaxed);
+fn negamax(chess: Chess, mut alpha: i32, beta: i32, depth: i32, turn: Color) -> i32 {
     if depth == 0 {
         return chess.evaluate(turn);
     }
@@ -35,32 +26,7 @@ fn negamax(
         }
     }
 
-    let mut ordered_moves = legal_moves
-        .iter()
-        .map(|&r#move| {
-            (
-                {
-                    let Move { from, to, prom } = r#move;
-                    let mut value = 0;
-                    let aggressor = chess.board[usize::from(from)].unwrap();
-
-                    if let Some(victim) = chess.board[usize::from(to)] {
-                        value += 10 * victim.r#type.evaluate_material()
-                            - aggressor.r#type.evaluate_material()
-                    }
-
-                    if let Some(prom_piece) = prom {
-                        value += prom_piece.evaluate_material()
-                    }
-
-                    value
-                },
-                r#move,
-            )
-        })
-        .collect::<Vec<(i32, Move)>>();
-
-    ordered_moves.sort_unstable_by(|(a, _), (b, _)| b.cmp(a));
+    let ordered_moves = chess.sort_moves(legal_moves);
 
     for (_, legal_move) in ordered_moves {
         let eval = !negamax(
@@ -69,8 +35,8 @@ fn negamax(
             !alpha,
             depth - 1,
             !turn,
-            num,
         );
+
         if eval >= beta {
             return beta;
         }

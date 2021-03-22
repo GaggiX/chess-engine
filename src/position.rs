@@ -321,3 +321,20 @@ impl TryFrom<&str> for Move {
         }
     }
 }
+
+impl Into<String> for Move {
+    fn into(self) -> String {
+        format!(
+            "{}{}{}",
+            Into::<String>::into(self.from),
+            Into::<String>::into(self.to),
+            match self.prom {
+                Some(PieceType::Knight) => "k",
+                Some(PieceType::Bishop) => "b",
+                Some(PieceType::Rook) => "r",
+                Some(PieceType::Queen) => "q",
+                _ => ""
+            }
+        )
+    }
+}
