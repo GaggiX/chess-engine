@@ -348,27 +348,7 @@ impl Chess {
     }
 
     pub fn get_best_move_uci(&self, depth: i32) -> Option<String> {
-        let mov = self.get_best_move(depth);
-        match mov {
-            Some(Move { from, to, prom }) => Some(format!(
-                "{}{}{}",
-                Into::<String>::into(from),
-                Into::<String>::into(to),
-                match prom {
-                    Some(prom) => {
-                        match prom {
-                            Knight => "k",
-                            Bishop => "b",
-                            Rook => "r",
-                            Queen => "q",
-                            _ => panic!("you can promote to a king"),
-                        }
-                    }
-                    None => "",
-                }
-            )),
-            None => None,
-        }
+        self.get_best_move(depth).map(|r#move| r#move.into())
     }
 }
 
